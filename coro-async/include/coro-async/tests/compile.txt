@@ -1,0 +1,4 @@
+clang++ -Wall -std=c++17 -I /net/homes/home1/amuralid/dev_test/coro-async/include -o io_serv_test io_serv_test.cpp
+clang++ -g -Wall -std=c++17 -I /net/homes/home1/amuralid/dev_test/coro-async/include -o tcp_acceptor_test tcp_acceptor_test.cpp -pthread
+clang++ -g -Wall -std=c++17 -I /net/homes/home1/amuralid/dev_test/coro-async/include -o tcp_async_read_some_test tcp_async_read_some_test.cpp -pthread
+clang++ -g -Wall -std=c++17 -I /net/homes/home1/amuralid/dev_test/coro-async/include -o tcp_async_write_some_test tcp_async_write_some_test.cpp -pthread

@@ -1,0 +1,5 @@
+#ifndef CORO_ASYNC_EXCEPTIONS_HPP
+#define CORO_ASYNC_EXCEPTIONS_HPP
+
+
+#endif
