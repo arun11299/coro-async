@@ -32,7 +32,8 @@ public:
    * false : When further reading resulted in WOULDBLOCK.
    * true : All bytes read.
    */
-  static bool nb_read(int sockfd, buffer::Buffer& buf, size_t& bytes_read, std::error_code& ec);
+  template <typename Buffer>
+  static bool nb_read(int sockfd, Buffer& buf, size_t& bytes_read, std::error_code& ec);
 
   /**
    * Non blocking socket write.
@@ -41,8 +42,9 @@ public:
    * true: All the data got transferred.
    * false: All data was not transferred.
    */
+  template <typename Buffer>
   static bool nb_write(
-      int sockfd, const buffer::Buffer& buf, size_t& bytes_wrote, std::error_code& ec);
+      int sockfd, const Buffer& buf, size_t& bytes_wrote, std::error_code& ec);
 };
 
 } // END namespace detail

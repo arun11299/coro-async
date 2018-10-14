@@ -40,7 +40,7 @@ int main() {
   acceptor.async_accept(sock, [&sock, &buf](const std::error_code& ec) {
                                 std::cout << "connection accepted" << std::endl;
                                 // Read some data
-                                sock.async_read_some(buf, [&buf](std::error_code rec, size_t bytes) {
+                                sock.async_read_some(coro_async::as_buffer(buf), [&buf](std::error_code rec, size_t bytes) {
                                       std::cout << "Read data" << std::endl;
                                       std::cout << buffer::helpers::to_string(buf) << std::endl;
                                     });

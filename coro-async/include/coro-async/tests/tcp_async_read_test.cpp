@@ -32,13 +32,18 @@ int main() {
     return -1;
   }
 
-  std::string buf{"tic_toc"};
+  buffer::Buffer buf;
+  // Only need to read 4 bytes of data
+  buf.resize(10);
+  auto bref = coro_async::as_buffer(buf);
 
-  acceptor.async_accept(sock, [&sock, &buf](const std::error_code& ec) {
+
+  acceptor.async_accept(sock, [&sock, &bref, &buf](const std::error_code& ec) {
                                 std::cout << "connection accepted" << std::endl;
                                 // Read some data
-                                sock.async_write_some(coro_async::as_buffer(buf), [](std::error_code wec, size_t bytes) {
-                                      std::cout << "wrote " << bytes << " data" << std::endl;
+                                sock.async_read(bref, [&buf](std::error_code rec, size_t bytes) {
+                                      std::cout << "Read data" << std::endl;
+                                      std::cout << buffer::helpers::to_string(buf) << std::endl;
                                     });
                               });
 

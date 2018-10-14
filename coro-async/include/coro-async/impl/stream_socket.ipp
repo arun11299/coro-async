@@ -27,8 +27,8 @@ void stream_socket::async_connect(endpoint ep, CompletionHandler&& ch)
   return;
 }
 
-template <typename ReadHandler>
-void stream_socket::async_read_some(buffer::Buffer& buf, ReadHandler&& rh)
+template <typename Buffer, typename ReadHandler>
+void stream_socket::async_read_some(const Buffer& buf, ReadHandler&& rh)
 {
   using handler_type = typename std::decay_t<ReadHandler>;
 
@@ -46,8 +46,30 @@ void stream_socket::async_read_some(buffer::Buffer& buf, ReadHandler&& rh)
   return;
 }
 
-template <typename WriteHandler>
-void stream_socket::async_write_some(const buffer::Buffer& buf, WriteHandler&& wh)
+template <typename ReadHandler>
+void stream_socket::async_read(buffer::buffer_ref& buf, ReadHandler&& rh)
+{
+  using handler_type = typename std::decay_t<ReadHandler>;
+
+  if (!is_open())
+  {
+    std::error_code ec{};
+    if (!open(ec)) return;
+    //TODO: Call completion handler with error
+    assert (0 && "Not implemented");
+  }
+
+  auto op = new detail::read_op<detail::composed_read_op<handler_type>>{
+                 *this, buf,
+                 detail::composed_read_op<handler_type>{*this, buf, std::forward<ReadHandler>(rh)}};
+
+  start_reactor_op(reactor_ops::read_op, op);
+
+  return;
+}
+
+template <typename Buffer, typename WriteHandler>
+void stream_socket::async_write_some(const Buffer& buf, WriteHandler&& wh)
 {
   using handler_type = typename std::decay_t<WriteHandler>;
 

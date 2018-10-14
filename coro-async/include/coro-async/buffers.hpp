@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "coro-async/buffer_ref.hpp"
 
 namespace coro_async {
 namespace buffer {
@@ -27,8 +28,22 @@ Buffer from_string(const std::string& str)
 }
 
 } // END namespace helpers
-
 } // END namespace buffer
+
+/**
+ */
+buffer::buffer_ref as_buffer(std::vector<char>& b)
+{
+  return buffer::buffer_ref{ &b[0], b.size() };
+}
+
+/**
+ */
+buffer::buffer_ref as_buffer(std::string& b)
+{
+  return buffer::buffer_ref{ &b[0], b.size() };
+}
+
 } // END namespace coro-async
 
 #endif

@@ -60,8 +60,9 @@ std::pair<int, endpoint> posix_socket_ops::accept(int sockfd, std::error_code& e
   return {new_fd, endpoint{addr, client_addr.sin_port}};
 }
 
+template <typename Buffer>
 bool posix_socket_ops::nb_read(
-    int sockfd, buffer::Buffer& buf, size_t& bytes_read, std::error_code& ec)
+    int sockfd, Buffer& buf, size_t& bytes_read, std::error_code& ec)
 {
   ec.clear();
 
@@ -113,8 +114,9 @@ bool posix_socket_ops::nb_read(
   return false;
 }
 
+template <typename Buffer>
 bool posix_socket_ops::nb_write(
-    int sockfd, const buffer::Buffer& buf, size_t& bytes_wrote, std::error_code& ec)
+    int sockfd, const Buffer& buf, size_t& bytes_wrote, std::error_code& ec)
 {
   ec.clear();
 

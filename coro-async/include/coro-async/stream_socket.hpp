@@ -3,10 +3,10 @@
 
 #include <string>
 
-#include "coro-async/buffers.hpp"
 #include "coro-async/endpoint.hpp"
 #include "coro-async/io_service.hpp"
 #include "coro-async/ip_address.hpp"
+#include "coro-async/buffer_ref.hpp"
 #include "coro-async/detail/descriptor.hpp"
 #include "coro-async/detail/socket_ops.hpp"
 #include "coro-async/detail/operation_base.hpp"
@@ -132,13 +132,20 @@ public: // Async Operations
   void async_connect(endpoint ep, CompletionHandler&& ch);
 
   /**
-   * Reads atmost buf.size() data into the buffer.
+   * Reads atmost buf.size() data into the Buffer.
    * Buffer must exist till async_read_some finishes execution.
    */
   // NOTE: basic implemenatation. No iovec and buffer
   // concept for now.
+  template <typename Buffer, typename ReadHandler>
+  void async_read_some(const Buffer& buf, ReadHandler&& rh);
+
+  /**
+   * Makes sure that it reads atleast `buf.size()` data.
+   * In case more data is read, will resize the buffer.
+   */
   template <typename ReadHandler>
-  void async_read_some(buffer::Buffer& buf, ReadHandler&& rh);
+  void async_read(buffer::buffer_ref& buf, ReadHandler&& rh);
 
   /**
    * Writes atmost buf.size() data to the socket.
@@ -146,8 +153,8 @@ public: // Async Operations
    */
   // NOTE: basic implementation. No iovec and buffer
   // concept for now.
-  template <typename WriteHandler>
-  void async_write_some(const buffer::Buffer& buf, WriteHandler&& wh);
+  template <typename Buffer, typename WriteHandler>
+  void async_write_some(const Buffer& buf, WriteHandler&& wh);
 
 private:
   ///
