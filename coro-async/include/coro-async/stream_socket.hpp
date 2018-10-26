@@ -34,6 +34,12 @@ public:
   {
   }
 
+  stream_socket(const stream_socket&) = delete;
+
+  stream_socket& operator=(const stream_socket&) = delete;
+
+  ~stream_socket() = default;
+
 public:
   /// Check if socket is created successfully
   bool is_open() const noexcept
@@ -155,6 +161,13 @@ public: // Async Operations
   // concept for now.
   template <typename Buffer, typename WriteHandler>
   void async_write_some(const Buffer& buf, WriteHandler&& wh);
+
+  /**
+   * Makes sure that it writes atleast all the data in the
+   * buffer.
+   */
+  template <typename WriteHandler>
+  void async_write(buffer::buffer_ref& buf, WriteHandler&& wh);
 
 private:
   ///

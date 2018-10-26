@@ -1,0 +1,29 @@
+An example usage that I want to see this library being used for simple socket programming.
+
+{code}
+#include <coro-async>
+
+<unspecifid> read_protocol(coro_socket& cs)
+{
+  char buf[4];
+  int rd_bytes = co_await cs.read(4, buf);
+  assert (rd_bytes == 4);
+
+  Header h{};
+  memcpy(&h, &rd_bytes[0], 4);
+
+  std::string body; 
+  body.reserve(h.body_len);
+  rd_bytes = co_await cs.read(h.body_len, body);
+
+  co_return body;
+}
+
+int main() {
+  io_service ios;
+  schedule_io_service(ios);
+  coro_socket cs{ios};
+  return 0;
+}
+
+{code}

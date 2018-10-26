@@ -76,8 +76,8 @@ class composed_write_op
 public:
   ///
   composed_write_op(stream_socket& sock,
-                   //TODO: Ouch!!
-                   const buffer::buffer_ref& buf,
+                   //TODO: Ouch!! Specialized buffer!
+                   buffer::buffer_ref& buf,
                    Handler&& h)
     : write_sock_(sock)
     , write_buffer_(buf)
@@ -156,8 +156,9 @@ public:
 private:
   /// The write stream socket
   stream_socket& write_sock_;
-  /// The write buffer
-  const buffer::buffer_ref& write_buffer_;
+  /// The write buffer.
+  /// NOTE: Not a const because of the `consume`` method
+  buffer::buffer_ref& write_buffer_;
   /// Bytes intended to be written
   size_t init_bytes_ = 0;
   /// The final completion handler to be executed

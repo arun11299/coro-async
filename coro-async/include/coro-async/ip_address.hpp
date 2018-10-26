@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <array>
-#include <experimental/string_view>
+#include <string_view>
 #include <exception>
 #include <system_error>
 
@@ -62,7 +62,7 @@ public:
 
   /**
    */
-  v4_address(std::experimental::string_view address)
+  v4_address(std::string_view address)
   {
     raw_bytes_t bytes;
     int rc = inet_pton(AF_INET, address.data(), &bytes);

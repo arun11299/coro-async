@@ -87,6 +87,28 @@ void stream_socket::async_write_some(const Buffer& buf, WriteHandler&& wh)
   return;
 }
 
+template <typename WriteHandler>
+void stream_socket::async_write(buffer::buffer_ref& buf, WriteHandler&& wh)
+{
+  using handler_type = typename std::decay_t<WriteHandler>;
+
+  if (!is_open())
+  {
+    std::error_code ec{};
+    if (!open(ec)) return;
+    //TODO: Call completion handler with error
+    assert (0 && "Not implemented");
+  }
+
+  auto op = new detail::write_op<detail::composed_write_op<handler_type>>{
+                 *this, buf,
+                 detail::composed_write_op<handler_type>{*this, buf, std::forward<WriteHandler>(wh)}};
+
+  start_reactor_op(reactor_ops::write_op, op);
+
+  return;
+}
+
 } // END namespace coro-async
 
 #endif
