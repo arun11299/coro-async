@@ -5,6 +5,7 @@
 
 #include "coro-async/tcp_acceptor.hpp"
 #include "coro-async/stream_socket.hpp"
+#include "coro-async/coro/coro_socket.hpp"
 
 namespace coro_async {
 
@@ -14,9 +15,9 @@ class accept_awaitable
 {
 public:
   ///
-  accept_awaitable(tcp_acceptor& acceptor, stream_socket& sock)
+  accept_awaitable(io_service& ios, tcp_acceptor& acceptor)
     : acceptor_(acceptor)
-    , sock_(sock)
+    , client_sock_(ios)
   {
     std::cout << "cons" << std::endl;
   }
@@ -42,15 +43,17 @@ public: // Awaitable implementation
   template <typename PromiseType>
   void await_suspend(stdex::coroutine_handle<PromiseType> ch)
   {
-    acceptor_.async_accept(sock_, [this, ch](const std::error_code ec) {
-                                    std::cout << "connection accepted" << std::endl;
-                                    this->handle_connection_accept(ch);
-                                  }
-                          );   
+    acceptor_.async_accept(client_sock_.get_stream_sock(), 
+          [this, ch](const std::error_code ec) {
+            std::cout << "connection accepted" << std::endl;
+            this->handle_connection_accept(ch);
+          });
   }
 
-  void await_resume() noexcept
+  ///
+  coro_socket await_resume() noexcept
   {
+    return std::move(client_sock_);
   }
 
 private:
@@ -66,7 +69,7 @@ private:
   tcp_acceptor& acceptor_;
 
   /// The underlying streaming socket reference
-  stream_socket& sock_;
+  coro_socket client_sock_;
 };
 
 } // END namespace coro_async

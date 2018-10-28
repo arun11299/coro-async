@@ -1,6 +1,7 @@
 #ifndef CORO_ASYNC_CORO_ACCEPTOR_HPP
 #define CORO_ASYNC_CORO_ACCEPTOR_HPP
 
+#include "coro-async/endpoint.hpp"
 #include "coro-async/io_service.hpp"
 #include "coro-async/tcp_acceptor.hpp"
 #include "coro-async/stream_socket.hpp"
@@ -14,33 +15,64 @@ class coro_acceptor
 {
 public:
   ///
-  coro_acceptor(io_service& ios, tcp_acceptor& acceptor)
+  coro_acceptor(io_service& ios)
     : ios_(ios)
-    , acceptor_(acceptor)
-    , client_sock_(ios)
-    , awaitable_(acceptor_, client_sock_)
+    , acceptor_(ios)
   {
   }
 
 public:
   ///
-  accept_awaitable& accept()
+  void open(const char* ip, uint16_t port, std::error_code& ec, uint32_t backlog=10)
   {
-    return awaitable_;
+    ec.clear();
+
+    acceptor_.open(ec);
+    if (ec)
+    {
+      return;
+    }
+
+    endpoint ep{v4_address{ip}, port};
+
+    acceptor_.bind(ep, ec);
+    if (ec)
+    {
+      return;
+    }
+
+    acceptor_.listen(backlog, ec);
+    if (ec)
+    {
+      return;
+    }
   }
+
+  ///
+  // TODO: check for error
+  accept_awaitable accept()
+  {
+    return { ios_, acceptor_ };
+  }
+
+  ///
+  io_service& get_io_service() noexcept
+  {
+    return ios_;
+  }
+
+  ///
+  tcp_acceptor& get_underlying_acceptor() noexcept
+  {
+    return acceptor_;
+  } 
 
 private:
   /// The io_service instance
   io_service& ios_;
 
   /// The acceptor instance
-  tcp_acceptor& acceptor_;
-
-  /// The client socket
-  stream_socket client_sock_;
-
-  /// The awaitable object instance
-  accept_awaitable awaitable_;
+  tcp_acceptor acceptor_;
 };
 
 } // END namespace coro_async

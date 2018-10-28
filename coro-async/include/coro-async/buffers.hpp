@@ -44,6 +44,14 @@ buffer::buffer_ref as_buffer(std::string& b)
   return buffer::buffer_ref{ &b[0], b.size() };
 }
 
+/**
+ */
+template <int N>
+buffer::buffer_ref as_buffer(char (&b)[N])
+{
+  return buffer::buffer_ref{ &b[0], N };
+}
+
 } // END namespace coro-async
 
 #endif

@@ -5,6 +5,7 @@
 #include "coro-async/io_service.hpp"
 #include "coro-async/stream_socket.hpp"
 #include "coro-async/coro/read_awaitable.hpp"
+#include "coro-async/coro/write_awaitable.hpp"
 
 namespace coro_async {
 
@@ -20,6 +21,21 @@ public:
   {
   }
 
+  coro_socket(coro_socket&&) = default;
+
+public:
+  ///
+  stream_socket& get_stream_sock() noexcept
+  {
+    return sock_;
+  }
+
+  ///
+  io_service& get_io_service() noexcept
+  {
+    return ios_;
+  }
+
 public: // The awaitables
   ///
   //TODO: This buffer_ref thing sucks beyond my imagination
@@ -28,9 +44,16 @@ public: // The awaitables
     return read_awaitable{sock_, bytes, buf};
   }
 
+  ///
+  write_awaitable write(size_t bytes, buffer::buffer_ref& buf)
+  {
+    return { sock_, bytes, buf };
+  }
+
 private:
   /// The io_service
   io_service& ios_;
+
   /// The underlying stream socket
   stream_socket sock_;
 };

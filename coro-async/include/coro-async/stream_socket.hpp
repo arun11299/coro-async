@@ -34,6 +34,15 @@ public:
   {
   }
 
+  /// Move copy constructible
+  stream_socket(stream_socket&& other)
+    : reactor_(other.reactor_)
+  {
+    impl_.desc_ = std::move(other.impl_.desc_);
+    impl_.desc_state_ = other.impl_.desc_state_;
+    other.impl_.desc_state_ = nullptr;
+  }
+
   stream_socket(const stream_socket&) = delete;
 
   stream_socket& operator=(const stream_socket&) = delete;

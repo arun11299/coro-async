@@ -1,9 +1,7 @@
 #ifndef CORO_ASYNC_READ_AWAITABLE_HPP
 #define CORO_ASYNC_READ_AWAITABLE_HPP
 
-#include <experimental/coroutine>
-#include "coro-async/buffer_ref.hpp"
-#include "coro-async/stream_socket.hpp"
+#include "coro-async/coro/result.hpp"
 
 namespace stdex = std::experimental;
 
@@ -15,12 +13,15 @@ class read_awaitable
 {
 public:
   /// 
-  read_awaitable(stream_socket& sock, size_t read_bytes, buffer::buffer_ref& buf)
+  read_awaitable(stream_socket& sock, size_t read_bytes, buffer::buffer_ref buf)
     : sock_(sock)
     , bytes_to_read_(read_bytes)
-    , read_buf_(read_buf_)
+    , read_buf_(buf)
   {
+    ec_.clear();
   }
+
+  ///
 
   ///
   read_awaitable(const read_awaitable&) = delete;
@@ -50,32 +51,40 @@ public: // Awaitable implementation
   }
 
   ///
-  void await_resume()
+  result_type<size_t> await_resume()
   {
-    //TODO: pass read data or size ?
-    return;
+    if (ec_) return { ec_ };
+    else     return { bytes_read_ };
   }
 
 private: // hidden implementation
   ///
   template <typename PromiseType>
-  void handle_read_cb(
-      const stdex::coroutine_handle<PromiseType> ch,
-      const std::error_code ec,
-      const size_t rd_bytes)
+  void handle_read_cb(stdex::coroutine_handle<PromiseType> ch,
+                      const std::error_code ec,
+                      const size_t rd_bytes)
   {
-#include <iostream>
-    std::cout << "Coroutine read callback worked!!!" << std::endl;
+    if (ec) ec_ = ec;
+    else bytes_read_ = rd_bytes;
+
+    ch.resume();
   }
 
 private:
   /// The underlying streaming socket reference
   stream_socket& sock_;
+
   /// Exact bytes to be read
-  size_t bytes_to_read_ = 0;
+  const size_t bytes_to_read_ = 0;
+
+  /// Bytes read from the network
+  size_t bytes_read_ = 0;
+
   /// The buffer reference into which data neads to be read
-  buffer::buffer_ref& read_buf_;
-  
+  buffer::buffer_ref read_buf_;
+
+  /// The error in async operation
+  std::error_code ec_;
 };
 
 } // END namespace coro_async

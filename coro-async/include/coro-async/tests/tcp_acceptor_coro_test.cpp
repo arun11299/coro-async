@@ -12,34 +12,32 @@ using namespace coro_async;
 
 coro_task<int> accept_conn(coro_acceptor& acc)
 {
-  co_await acc.accept();
+  auto client_sock = co_await acc.accept();
+  char buf[4];
+  auto bref = as_buffer(buf);
+
+  co_await client_sock.read(4, bref);
+  std::cout << "Read from nw: " << std::string{buf} << std::endl;
+
+  co_await client_sock.write(4, bref);
+
   co_return;
 }
 
 int main() {
   io_service ios{};
-  tcp_acceptor acceptor{ios};
-  coro_acceptor cacceptor{ios, acceptor};
+  coro_acceptor acceptor{ios};
+
   std::error_code ec{};
+  acceptor.open("127.0.0.1", 8080, ec);
 
-  endpoint ep{v4_address{"127.0.0.1"}, 8080};
-  acceptor.open(ec);
-  if (ec) {
-    std::cout << "acceptor init failed: " << ec.message() << '\n';
-    return -1;
-  }
-  acceptor.bind(ep, ec);
-  if (ec) {
-    std::cout << "bind failed: " << ec.message() << '\n';
-    return -1;
-  }
-  acceptor.listen(1, ec);
-  if (ec) {
-    std::cout << "listen failed: " << ec.message() << '\n';
+  if (ec)
+  {
+    std::cout << "error: " << ec.message() << std::endl;
     return -1;
   }
 
-  accept_conn(cacceptor);
+  accept_conn(acceptor);
 
   std::thread thr{[&] { ios.run(); }};
   thr.join();
