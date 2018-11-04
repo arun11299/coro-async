@@ -38,6 +38,8 @@ public: // 'tors
     make_fd_non_blocking();
   }
 
+  descriptor(const descriptor&) = delete;
+
   /// Move assign
   descriptor& operator=(descriptor&& other)
   {
@@ -47,6 +49,8 @@ public: // 'tors
     make_fd_non_blocking();
     return *this;
   }
+
+  descriptor& operator=(const descriptor&) = delete;
 
   /// Close the descriptor
   ~descriptor()

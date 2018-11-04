@@ -114,7 +114,7 @@ void epoll_reactor::run(int timeout)
   int num_events = epoll_wait(epoll_.get(),
                               &events[0],
                               sizeof(events)/sizeof(epoll_event),
-                              -1);
+                              timeout);
 
   for (int i = 0; i < num_events; i++)
   {

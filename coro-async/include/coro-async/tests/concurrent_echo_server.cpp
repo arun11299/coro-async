@@ -4,16 +4,17 @@
 
 using namespace coro_async;
 
-coro_task<int> handle_client(coro_socket client)
+coro_task<void> handle_client(coro_socket client)
 {
   char buf[6]; // for only "Hello!"
   auto bref = as_buffer(buf);
   co_await client.read(6, bref);
   co_await client.write(6, bref);
+  client.close();
   co_return;
 }
 
-coro_task<int> server_run(coro_acceptor& acc)
+coro_task<void> server_run(coro_acceptor& acc)
 {
   while ( true )
   {

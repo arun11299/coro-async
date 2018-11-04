@@ -21,7 +21,9 @@ public:
   {
   }
 
-  coro_socket(coro_socket&&) = default;
+  coro_socket(coro_socket&& other) = default;
+
+  ~coro_socket() = default;
 
 public:
   ///
@@ -36,18 +38,24 @@ public:
     return ios_;
   }
 
+  ///
+  void close()
+  {
+    sock_.close();  
+  }
+
 public: // The awaitables
   ///
   //TODO: This buffer_ref thing sucks beyond my imagination
-  read_awaitable read(size_t bytes, buffer::buffer_ref& buf)
+  auto read(size_t bytes, buffer::buffer_ref& buf)
   {
     return read_awaitable{sock_, bytes, buf};
   }
 
   ///
-  write_awaitable write(size_t bytes, buffer::buffer_ref& buf)
+  auto write(size_t bytes, buffer::buffer_ref& buf)
   {
-    return { sock_, bytes, buf };
+    return write_awaitable{sock_,bytes, buf};
   }
 
 private:

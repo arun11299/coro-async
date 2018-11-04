@@ -1,6 +1,10 @@
 #ifndef CORO_ASYNC_IO_SERVICE_HPP
 #define CORO_ASYNC_IO_SERVICE_HPP
 
+#include <queue>
+#include <vector>
+#include <functional>
+#include "coro-async/timer_queue.hpp"
 #include "coro-async/detail/epoll_reactor.hpp"
 
 namespace coro_async {
@@ -30,19 +34,30 @@ public:
     return reactor_;
   }
 
-  void run()
+  ///
+  template <typename T>
+  void schedule_after(std::chrono::seconds secs, T&& cb)
   {
-    while ( true )
-    {
-      reactor_.run(0);
-    }
+    timers_.add(secs, std::forward<T>(cb));
   }
+
+  template <typename T>
+  void schedule_after(std::chrono::milliseconds msecs, T&& cb)
+  {
+    timers_.add(msecs, std::forward<T>(cb));
+  }
+
+  void run();
 
 private:
   ///
   detail::epoll_reactor reactor_;
+  ///
+  timer_queue<std::function<void()>> timers_;
 };
 
-}
+} // END namespace coro-async
+
+#include "coro-async/impl/io_service.ipp"
 
 #endif

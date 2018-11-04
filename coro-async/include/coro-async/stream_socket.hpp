@@ -47,7 +47,14 @@ public:
 
   stream_socket& operator=(const stream_socket&) = delete;
 
-  ~stream_socket() = default;
+  ~stream_socket()
+  {
+    if (impl_.desc_state_)
+    {
+      delete impl_.desc_state_;
+      impl_.desc_state_ = nullptr;
+    }
+  }
 
 public:
   /// Check if socket is created successfully
@@ -78,6 +85,14 @@ public:
     }
 
     return true;
+  }
+
+  /// Close the socket
+  void close()
+  {
+    assert (impl_.desc_state_);
+    delete impl_.desc_state_;
+    impl_.desc_state_ = nullptr;
   }
 
   /// Assign a descriptor
