@@ -10,9 +10,7 @@ using namespace std::chrono_literals;
 coro_task<void> waiter(io_service& ios)
 {
   coro_scheduler s{ios};
-  std::cout << "start sleep" << std::endl;
-  co_await s.yield_for(2s);
-  std::cout << "end sleep" << std::endl;
+  co_await s.wait_for([]() { std::cout << "called" << std::endl; } );
   co_return;
 }
 

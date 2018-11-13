@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include "coro-async/timer_queue.hpp"
+#include "coro-async/detail/scheduler.hpp"
 #include "coro-async/detail/epoll_reactor.hpp"
 
 namespace coro_async {
@@ -31,7 +32,7 @@ public:
   ///
   detail::epoll_reactor& get_reactor() noexcept
   {
-    return reactor_;
+    return scheduler_.get_reactor();
   }
 
   ///
@@ -41,17 +42,23 @@ public:
     timers_.add(secs, std::forward<T>(cb));
   }
 
+  ///
   template <typename T>
   void schedule_after(std::chrono::milliseconds msecs, T&& cb)
   {
     timers_.add(msecs, std::forward<T>(cb));
   }
 
+  ///
   void run();
 
-private:
   ///
-  detail::epoll_reactor reactor_;
+  template <typename TaskFn>
+  void post(TaskFn&& task);
+
+private:
+  /// Scheduler instance
+  detail::scheduler scheduler_;
   ///
   timer_queue<std::function<void()>> timers_;
 };

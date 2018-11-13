@@ -37,6 +37,10 @@ public: //'tors
 private:
   /// 
   callback_t cb_ = nullptr;
+  /// Forms a linked list
+
+public: // TODO:: Needs an access class to be made friend of
+  operation_base* next_ = nullptr;
 };
 
 } // END namespace detail

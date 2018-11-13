@@ -25,6 +25,13 @@ public:
   }
 
   ///
+  template <typename... Args>
+  void construct(Args&&... args)
+  {
+    res_repr_ = T{std::forward<Args>(args)...};
+  }
+
+  ///
   bool is_error() const noexcept
   {
     return std::holds_alternative<std::error_code>(res_repr_);
@@ -45,6 +52,13 @@ public:
 private:
   /// Internal representation of result type
   std::variant<T, std::error_code> res_repr_;
+};
+
+/**
+ */
+template <>
+struct result_type<void>
+{
 };
 
 
