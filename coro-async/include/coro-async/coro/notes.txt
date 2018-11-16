@@ -27,3 +27,29 @@ int main() {
 }
 
 {code}
+
+
+2. Waiting for completion of coroutine tasks.
+
+coro_task<void> do_some_coro_stuff(coro_scheduler& cs)
+{
+  puts("start 2s\n");
+  co_await cs.yield_for(2s);
+
+  puts("Finish 2s. Start 1s\n");
+
+  co_await cs.yield_for(1s);
+  puts("Finish 1s\n");
+}
+
+coro_task<void> perform_seq(coro_scheduler& cs)
+{
+  // This should wait for all the async tasks to finish
+  // in do_some_coro_stuff.
+  co_await cs.wait_for([&cs](){ do_some_coro_stuff(cs); });
+}
+
+/// Current flow of events
+1. `wait_for` will wrap the pased task into a lambda which calls the awaitable function.
+2. The scheduler calls the outer awaitable function which resumes the outer awaitable.
+3. The inner coroutine functions are never waited for to finish.

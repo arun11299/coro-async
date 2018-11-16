@@ -6,6 +6,8 @@
 #include <experimental/coroutine>
 #include "coro-async/io_service.hpp"
 #include "coro-async/coro/result.hpp"
+#include "coro-async/detail/meta.hpp"
+
 
 namespace stdex = std::experimental;
 
@@ -45,6 +47,7 @@ public: // Awaitable interface
   template <typename PromiseType>
   void await_suspend(stdex::coroutine_handle<PromiseType> ch)
   {
+    std::cout << "await_suspend timed\n";
     ios_.schedule_after(duration_, [ch]() mutable {
           ch.resume(); 
         });
@@ -66,21 +69,21 @@ public:
 
 //================================================================================
 
-template <typename Handler>
-using handler_return_type = typename std::decay<decltype(std::declval<Handler>()())>::type;
-
 /**
  */
 template <typename Handler>
-class task_completion_awaitable: public result_type<handler_return_type<Handler>>
+class task_completion_awaitable: public result_type<
+                                  typename detail::meta::deduce_return_type<Handler>::handler_return_type> 
 {
 public:
   // The return type of handler
-  using return_type = handler_return_type<Handler>;
+  using handler_return_type = typename detail::meta::deduce_return_type<Handler>::handler_return_type;
+  using return_type = typename detail::meta::deduce_return_type<Handler>::type;
 
   ///
   task_completion_awaitable(io_service& ios, Handler&& h)
-    : ios_(ios)
+    : result_type<handler_return_type>()
+    , ios_(ios)
     , handler_(std::forward<Handler>(h))
   {
   }
@@ -102,17 +105,62 @@ public: // Awaitable interface
   template <typename PromiseType>
   void await_suspend(stdex::coroutine_handle<PromiseType> ch)
   {
-    ios_.post([this, ch]() {
-          this->task_completed(ch);
-        });
+    if constexpr (detail::meta::is_coro_task<handler_return_type>::value)
+    {
+      auto coro_handler = handler_();
+      if constexpr (!std::is_void<return_type>{})
+      {
+        coro_handler.add_done_callback(
+              [this, ch](return_type value)
+              {
+                this->ios_.post(
+                      [this, ch, result{std::move(value)}]() mutable
+                      {
+                        result_type<return_type>::construct(std::move(result));
+                        ch.resume();
+                      }
+                    );
+              }
+            );
+      }
+      else
+      {
+        coro_handler.add_done_callback(
+              [this, ch]()
+              {
+                this->ios_.post(
+                      [ch]() mutable
+                      {
+                        std::cout << "ios post also called?" << std::endl;
+                        ch.resume();
+                      }
+                    );
+              }
+            );
+      }
+    }
+    else
+    {
+      ios_.post([this, ch]() { this->task_completed(ch); });
+    }
   }
 
   ///
   result_type<return_type> await_resume()
   {
-    if constexpr (!std::is_void<return_type>::value)
+    if constexpr (!std::is_void<handler_return_type>::value)
     {
-      return { result_type<return_type>::result() };
+      using rtype = handler_return_type;
+
+      if constexpr (detail::meta::is_coro_task<rtype>::value
+                    && !std::is_void<typename rtype::return_type>::value)
+      {
+        return { result_type<return_type>::result() };
+      }
+      else
+      {
+        return result_type<void>{};
+      }
     }
     else
     {
@@ -125,10 +173,10 @@ private:
   template <typename PromiseType>
   void task_completed(stdex::coroutine_handle<PromiseType> ch)
   {
-    if constexpr (!std::is_void<return_type>::value)
+    static_assert(!detail::meta::is_coro_task<handler_return_type>::value, "Only to be called for non-coroutines");
+    if constexpr (!std::is_void<handler_return_type>{})
     {
-      auto res = handler_();
-      result_type<return_type>::construct(std::move(res));
+      result_type<return_type>::construct(handler_());
     }
     else
     {

@@ -21,23 +21,6 @@ void io_service::run()
   {
     std::error_code ec{};
     scheduler_.run(ec);
-
-    // Check for timer tasks
-    auto curr_time = timers_.current_time();
-    while (timers_.size())
-    {
-      // TODO: Copy ?
-      auto element = timers_.peek();
-      if (curr_time >= element.first)
-      {
-        (element.second)();
-        timers_.remove();
-      }
-      else
-      {
-        break;
-      }
-    }
   }
 }
 

@@ -1,11 +1,12 @@
-#ifndef CORO_ASYNC_TIMER_QUEUE_HPP
-#define CORO_ASYNC_TIMER_QUEUE_HPP
+#ifndef CORO_ASYNC_DETAIL_TIMER_QUEUE_HPP
+#define CORO_ASYNC_DETAIL_TIMER_QUEUE_HPP
 
 #include <queue>
 #include <chrono>
 #include <vector>
 
 namespace coro_async {
+namespace detail     {
 
 /**
  */
@@ -78,6 +79,7 @@ private:
   std::priority_queue<element_type, container_type, element_type_cmp> q_;
 };
 
+} // END namespace detail
 } // END namespace coro_async
 
 #endif

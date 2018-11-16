@@ -7,7 +7,7 @@
 using namespace coro_async;
 using namespace std::chrono_literals;
 
-coro_task<void> waiter(io_service& ios)
+coro_task_auto<void> waiter(io_service& ios)
 {
   coro_scheduler s{ios};
   std::cout << "start sleep" << std::endl;

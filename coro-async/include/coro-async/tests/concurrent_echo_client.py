@@ -19,7 +19,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     task_q = []
-    for i in range(10000):
+    for i in range(10):
         t = loop.create_task(tcp_echo_client(message, loop))
         task_q.append(t)
 

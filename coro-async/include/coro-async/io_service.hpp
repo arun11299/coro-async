@@ -4,7 +4,6 @@
 #include <queue>
 #include <vector>
 #include <functional>
-#include "coro-async/timer_queue.hpp"
 #include "coro-async/detail/scheduler.hpp"
 #include "coro-async/detail/epoll_reactor.hpp"
 
@@ -39,14 +38,14 @@ public:
   template <typename T>
   void schedule_after(std::chrono::seconds secs, T&& cb)
   {
-    timers_.add(secs, std::forward<T>(cb));
+    scheduler_.schedule_after(secs, std::forward<T>(cb));
   }
 
   ///
   template <typename T>
   void schedule_after(std::chrono::milliseconds msecs, T&& cb)
   {
-    timers_.add(msecs, std::forward<T>(cb));
+    scheduler_.schedule_after(msecs, std::forward<T>(cb));
   }
 
   ///
@@ -59,8 +58,6 @@ public:
 private:
   /// Scheduler instance
   detail::scheduler scheduler_;
-  ///
-  timer_queue<std::function<void()>> timers_;
 };
 
 } // END namespace coro-async

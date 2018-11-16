@@ -7,10 +7,21 @@
 using namespace coro_async;
 using namespace std::chrono_literals;
 
-coro_task<void> waiter(io_service& ios)
+coro_task_auto<void> waiter(io_service& ios)
 {
   coro_scheduler s{ios};
-  co_await s.wait_for([]() { std::cout << "called" << std::endl; } );
+  std::cout << "Wait for completion\n";
+  co_await s.wait_for(
+        [&ios]() -> coro_task_auto<void> {
+          std::cout << "called again??\n";
+          coro_scheduler s{ios};
+          std::cout << "start sleep" << std::endl;
+          co_await s.yield_for(2s);
+          std::cout << "end sleep" << std::endl;
+          co_return;
+        }
+      );
+  std::cout << "Wait completed\n";
   co_return;
 }
 

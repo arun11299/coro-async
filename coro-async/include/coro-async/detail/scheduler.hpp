@@ -6,12 +6,13 @@
 #include <condition_variable>
 
 #include "coro-async/io_service.hpp"
+#include "coro-async/detail/timer_queue.hpp"
 #include "coro-async/detail/scheduler_op.hpp"
 #include "coro-async/detail/epoll_reactor.hpp"
 #include "coro-async/detail/operation_queue.hpp"
 
 namespace coro_async {
-namespace detail {
+namespace detail     {
 
 /**
  */
@@ -37,6 +38,14 @@ public: // Scheduler APIs
   void post(scheduler_op<Handler>* op);
 
   ///
+  template <typename T>
+  void schedule_after(std::chrono::seconds secs, T&& cb);
+ 
+  ///
+  template <typename T>
+  void schedule_after(std::chrono::milliseconds msecs, T&& cb);
+
+  ///
   void run(std::error_code& ec);
 
 private:
@@ -51,8 +60,14 @@ private:
   /// for execution.
   operation_queue<operation_base> op_q_;
 
+  /// Timer queue
+  timer_queue<std::function<void()>> timers_;
+
   /// Lock to protect access to operation_queue
   std::mutex op_q_lock_;
+
+  /// Lock to protect timer queue access
+  std::mutex timer_q_lock_;
 
   /// Wait event
   std::condition_variable wait_event_;
