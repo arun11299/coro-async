@@ -18,7 +18,6 @@ void stream_socket::async_connect(endpoint ep, CompletionHandler&& ch)
     std::error_code ec{};
     if (!open(ec)) return;
     //TODO: Call completion handler with error
-    assert (0 && "Not implemented");
   }
 
   auto op = new detail::descriptor_op<handler_type>{std::forward<CompletionHandler>(ch)};

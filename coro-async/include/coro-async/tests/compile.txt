@@ -7,3 +7,4 @@ clang++ -g -Wall -std=c++17 -fcoroutines-ts -stdlib=libc++ -I /net/homes/home1/a
 clang++ -g -Wall -std=c++17 -fcoroutines-ts -stdlib=libc++ -I /net/homes/home1/amuralid/dev_test/coro-async/include -o concurrent_echo_server  concurrent_echo_server.cpp  -pthread -lc++abi -lsupc++
 clang++ -g -Wall -std=c++17 -fcoroutines-ts -stdlib=libc++ -I /net/homes/home1/amuralid/dev_test/coro-async/include -o time_yield time_yield.cc -pthread -lc++abi -lsupc++
 clang++ -g -Wall -std=c++17 -fcoroutines-ts -stdlib=libc++ -I /net/homes/home1/amuralid/dev_test/coro-async/include -o await_post await_post.cc -pthread -lc++abi -lsupc++
+clang++ -g -Wall -std=c++17 -fcoroutines-ts -stdlib=libc++ -I /net/homes/home1/amuralid/dev_test/coro-async/include -o tcp_connector_coro_test tcp_connector_coro_test.cpp -pthread -lc++abi -lsupc++
