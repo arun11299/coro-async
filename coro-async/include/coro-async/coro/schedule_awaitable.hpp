@@ -72,17 +72,20 @@ public:
 /**
  */
 template <typename Handler>
-class task_completion_awaitable: public result_type<
-                                  typename detail::meta::deduce_return_type<Handler>::handler_return_type> 
+class task_completion_awaitable: 
+  public deduce_result_type<Handler>::type
 {
 public:
-  // The return type of handler
+  /// The return type of handler
   using handler_return_type = typename detail::meta::deduce_return_type<Handler>::handler_return_type;
-  using return_type = typename detail::meta::deduce_return_type<Handler>::type;
+  /// The actual return type
+  using actual_return_type = typename detail::meta::deduce_return_type<Handler>::type;
+  /// The result_type which wraps the actual_return_type
+  using result_type = typename deduce_result_type<Handler>::type;
 
   ///
   task_completion_awaitable(io_service& ios, Handler&& h)
-    : result_type<handler_return_type>()
+    : result_type()
     , ios_(ios)
     , handler_(std::forward<Handler>(h))
   {
@@ -108,15 +111,15 @@ public: // Awaitable interface
     if constexpr (detail::meta::is_coro_task<handler_return_type>::value)
     {
       auto coro_handler = handler_();
-      if constexpr (!std::is_void<return_type>{})
+      if constexpr (!std::is_void<actual_return_type>{})
       {
         coro_handler.add_done_callback(
-              [this, ch](return_type value)
+              [this, ch](actual_return_type value)
               {
                 this->ios_.post(
                       [this, ch, result{std::move(value)}]() mutable
                       {
-                        result_type<return_type>::construct(std::move(result));
+                        result_type::construct(std::move(result));
                         ch.resume();
                       }
                     );
@@ -131,7 +134,6 @@ public: // Awaitable interface
                 this->ios_.post(
                       [ch]() mutable
                       {
-                        std::cout << "ios post also called?" << std::endl;
                         ch.resume();
                       }
                     );
@@ -146,25 +148,15 @@ public: // Awaitable interface
   }
 
   ///
-  result_type<return_type> await_resume()
+  result_type await_resume()
   {
-    if constexpr (!std::is_void<handler_return_type>::value)
+    if constexpr (!std::is_void<actual_return_type>{})
     {
-      using rtype = handler_return_type;
-
-      if constexpr (detail::meta::is_coro_task<rtype>::value
-                    && !std::is_void<typename rtype::return_type>::value)
-      {
-        return { result_type<return_type>::result() };
-      }
-      else
-      {
-        return result_type<void>{};
-      }
+      return { std::move(result_type::result()) };
     }
     else
     {
-      return result_type<void>{};
+      return result_type{};
     }
   }
 
@@ -174,9 +166,10 @@ private:
   void task_completed(stdex::coroutine_handle<PromiseType> ch)
   {
     static_assert(!detail::meta::is_coro_task<handler_return_type>::value, "Only to be called for non-coroutines");
-    if constexpr (!std::is_void<handler_return_type>{})
+
+    if constexpr (!std::is_void<actual_return_type>{})
     {
-      result_type<return_type>::construct(handler_());
+      result_type::construct(handler_());
     }
     else
     {

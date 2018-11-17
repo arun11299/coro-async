@@ -2,6 +2,7 @@
 #define CORO_ASYNC_READ_AWAITABLE_HPP
 
 #include "coro-async/coro/result.hpp"
+#include "coro-async/detail/meta.hpp"
 
 namespace stdex = std::experimental;
 
@@ -51,7 +52,7 @@ public: // Awaitable implementation
   }
 
   ///
-  result_type<size_t> await_resume()
+  result_type_non_coro<size_t> await_resume()
   {
     if (ec_) return { ec_ };
     else     return { bytes_read_ };

@@ -2,6 +2,7 @@
 #define CORO_ASYNC_WRITE_AWAITABLE_HPP
 
 #include "coro-async/coro/result.hpp"
+#include "coro-async/detail/meta.hpp"
 
 namespace coro_async {
 
@@ -47,7 +48,7 @@ public: // Awaitable Implementation
   }
 
   ///
-  result_type<size_t> await_resume()
+  result_type_non_coro<size_t> await_resume()
   {
     if (ec_) return { ec_ };
     else     return { bytes_wrote_ };
