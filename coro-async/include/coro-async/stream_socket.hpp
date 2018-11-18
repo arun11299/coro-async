@@ -31,12 +31,14 @@ public:
    */
   stream_socket(io_service& io_srv)
     : reactor_(io_srv.get_reactor())
+    , ios_(io_srv)
   {
   }
 
   /// Move copy constructible
   stream_socket(stream_socket&& other)
     : reactor_(other.reactor_)
+    , ios_(other.ios_)
   {
     impl_.desc_ = std::move(other.impl_.desc_);
     impl_.desc_state_ = other.impl_.desc_state_;
@@ -155,6 +157,11 @@ public:
     reactor_.start_op(impl_.desc_, impl_.desc_state_, r_op, op);
   }
 
+  /**
+   */
+  template <typename CompletionHandler>
+  void start_connect_op(endpoint ep, CompletionHandler&& ch);
+
 public: // Async Operations
   /**
    */
@@ -198,6 +205,8 @@ private:
   implementation impl_;
   ///
   detail::epoll_reactor& reactor_;
+  ///
+  io_service& ios_;
 };
 
 

@@ -63,6 +63,7 @@ private:
   {
     if (ec) ec_ = ec;
     else bytes_wrote_ = wr_bytes;
+    std::cout << "handle_write_cb" << std::endl;
 
     ch.resume();
   }

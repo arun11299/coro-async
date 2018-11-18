@@ -23,7 +23,7 @@ public:
   // TODO: check for error
   connect_awaitable connect(const char* ip, uint16_t port)
   {
-    endpoint ep{v4_address{ip}, 8080};
+    endpoint ep{v4_address{ip}, port};
     return { ios_, ep };
   }
 

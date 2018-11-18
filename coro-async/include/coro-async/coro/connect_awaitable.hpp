@@ -41,7 +41,6 @@ public: // Awaitable implementation
           [this, ch](const std::error_code ec, size_t bytes_xferred)
           {
             (void)bytes_xferred;
-            std::cout << "connected to peer" << std::endl;
             this->handle_connection_complete(ch);
           });
   }

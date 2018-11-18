@@ -19,11 +19,17 @@ public:
   /// `listen` system call
   static void listen(int sockfd, unsigned backlog, std::error_code& ec);
 
+  /// `connect` system call
+  static void connect(int sockfd, endpoint ep, std::error_code& ec);
+
   /**
    * `accept` system call
    * Returns a pair consisting of the new socket and the peer endpoint
    */
   static std::pair<int, endpoint> accept(int sockfd, std::error_code& ec);
+
+  /// `connect` system call (always on non-blocking socket)
+  static bool nb_connect(int sockfd, std::error_code& ec);
 
   /**
    * Non blocking socket read.

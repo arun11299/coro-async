@@ -5,6 +5,7 @@
 #include "coro-async/detail/socket_ops.hpp"
 
 extern "C" {
+  #include <poll.h>
   #include <unistd.h>
   #include <sys/types.h>
   #include <sys/socket.h>
@@ -43,6 +44,40 @@ void posix_socket_ops::listen(int sockfd, unsigned backlog, std::error_code& ec)
   return;
 }
 
+void posix_socket_ops::connect(int sockfd, endpoint ep, std::error_code& ec)
+{
+  ec.clear();
+
+  sockaddr_in address;
+  address.sin_family = AF_INET;
+  address.sin_addr = ep.address().native_addr();
+  address.sin_port = ::htons(ep.port());
+
+  int rc = ::connect(sockfd, (sockaddr*)&address, sizeof(sockaddr_in));
+  if (rc != 0)
+  {
+    switch (errno)
+    {
+      case EINPROGRESS:
+        ec = error::socket_errc::in_progress;
+        break;
+      case ECONNREFUSED:
+        ec = error::socket_errc::conn_refused;
+        break;
+      case EADDRINUSE:
+        ec = error::socket_errc::addr_in_use;
+        break;
+      case EWOULDBLOCK:
+        ec = error::socket_errc::would_block;
+        break;
+      default:
+        ec = std::error_code{errno, std::system_category()};
+        break;
+    };
+  }
+  return;
+}
+
 std::pair<int, endpoint> posix_socket_ops::accept(int sockfd, std::error_code& ec)
 {
   ec.clear();
@@ -58,6 +93,38 @@ std::pair<int, endpoint> posix_socket_ops::accept(int sockfd, std::error_code& e
   v4_address addr{client_addr.sin_addr};
 
   return {new_fd, endpoint{addr, client_addr.sin_port}};
+}
+
+bool posix_socket_ops::nb_connect(int sockfd, std::error_code& ec)
+{
+  ec.clear();
+
+  pollfd fds;
+  fds.fd = sockfd;
+  fds.events = POLLOUT;
+  fds.revents = 0;
+  int ready = ::poll(&fds, 1, 0);
+ 
+  if (!ready)
+  {
+    /// Still in progress
+    return false;
+  }
+  // Check for connection errors that might have
+  // happened while the operation was in progress
+  int connect_error = 0;
+  unsigned int connect_error_len = sizeof(connect_error);
+
+  if (::getsockopt(sockfd, SOL_SOCKET, SO_ERROR,
+                   &connect_error, &connect_error_len) == 0)
+  {
+    if (connect_error)
+    {
+      ec = std::error_code{connect_error, std::system_category()};
+    }
+  }
+
+  return true;
 }
 
 template <typename Buffer>

@@ -19,6 +19,9 @@ enum class socket_errc
   interrupted,         // EINTR
   invalid_descriptor,  // EINVAL
   io_error,            // EIO
+  addr_in_use,         // EADDRINUSE
+  conn_refused,        // ECONNREFUSED
+  in_progress,         // EINPROGRESS
   unknown,
 };
 

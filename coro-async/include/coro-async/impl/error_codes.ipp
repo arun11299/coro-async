@@ -38,6 +38,12 @@ struct socket_err_category: std::error_category
         return "invalid fd";
       case socket_errc::io_error:
         return "io error";
+      case socket_errc::addr_in_use:
+        return "address in use";
+      case socket_errc::conn_refused:
+        return "connection refused";
+      case socket_errc::in_progress:
+        return "operation in progress";
       case socket_errc::unknown:
         return "unknown";
       default:

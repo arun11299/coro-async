@@ -55,7 +55,7 @@ public: // The awaitables
   ///
   auto write(size_t bytes, buffer::buffer_ref& buf)
   {
-    return write_awaitable{sock_,bytes, buf};
+    return write_awaitable{sock_, bytes, buf};
   }
 
 private:
