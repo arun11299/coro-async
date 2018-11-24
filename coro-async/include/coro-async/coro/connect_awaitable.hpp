@@ -41,14 +41,19 @@ public: // Awaitable implementation
           [this, ch](const std::error_code ec, size_t bytes_xferred)
           {
             (void)bytes_xferred;
+            conn_ec_ = ec;
             this->handle_connection_complete(ch);
           });
   }
 
   ///
-  coro_socket await_resume() noexcept
+  result_type_non_coro<coro_socket> await_resume() noexcept
   {
-    return std::move(client_sock_);
+    if (conn_ec_)
+    {
+      return { conn_ec_ };
+    }
+    return { std::move(client_sock_) };
   }
 
 private:
@@ -65,6 +70,9 @@ private:
 
   /// The enpoint to connect to
   endpoint peer_;
+
+  /// Error code for async connect
+  std::error_code conn_ec_;
 };
 
 } // END namespace coro_async

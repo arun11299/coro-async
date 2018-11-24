@@ -1,3 +1,25 @@
+/*
+  Copyright (c) 2018 Arun Muralidharan
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 #ifndef CORO_ASYNC_SCHEDULE_AWAITABLE_HPP
 #define CORO_ASYNC_SCHEDULE_AWAITABLE_HPP
 
@@ -14,6 +36,8 @@ namespace stdex = std::experimental;
 namespace coro_async {
 
 /**
+ * An awaitable interface for performing an operation after 
+ * a duration.
  */
 class timed_schedule_awaitable
 {
@@ -43,11 +67,10 @@ public: // Awaitable interface
     return false;
   }
 
-  ///
+  /// Schedules the resume operation after provided duration.
   template <typename PromiseType>
   void await_suspend(stdex::coroutine_handle<PromiseType> ch)
   {
-    std::cout << "await_suspend timed\n";
     ios_.schedule_after(duration_, [ch]() mutable {
           ch.resume(); 
         });
@@ -70,12 +93,20 @@ public:
 //================================================================================
 
 /**
+ * An awaitable interface for completing the task.
+ * The task itself could be a coroutine. In such cases,
+ * it creates a stacked operation chain to finish
+ * the operations one after the other.
  */
 template <typename Handler>
 class task_completion_awaitable: 
   public deduce_result_type<Handler>::type
 {
 public:
+  /**
+   * The `handler_return_type` and `actual_return_type` would be the
+   * same in case of non coroutine tasks.
+   */
   /// The return type of handler
   using handler_return_type = typename detail::meta::deduce_return_type<Handler>::handler_return_type;
   /// The actual return type
@@ -108,6 +139,8 @@ public: // Awaitable interface
   template <typename PromiseType>
   void await_suspend(stdex::coroutine_handle<PromiseType> ch)
   {
+    // If its a coroutine task, then add a done callback to
+    // the coroutine, so that we can resume the current coroutine.
     if constexpr (detail::meta::is_coro_task<handler_return_type>::value)
     {
       auto coro_handler = handler_();

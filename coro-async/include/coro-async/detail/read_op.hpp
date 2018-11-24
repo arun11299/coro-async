@@ -1,3 +1,25 @@
+/*
+  Copyright (c) 2018 Arun Muralidharan
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 #ifndef CORO_ASYNC_READ_OP_HPP
 #define CORO_ASYNC_READ_OP_HPP
 
@@ -11,12 +33,18 @@ namespace coro_async {
 namespace detail {
 
 /**
+ * Handler for reading data from socket when its ready.
  */
 template <typename Handler>
 class read_op: public operation_base
 {
 public:
-  ///
+  /**
+   * Constructor.
+   * \param read_sock - The socket from which data is to be read.
+   * \param buf - The buffer into which data would be read into.
+   * \param ch - The completion handler.
+   */
   template <typename Buffer>
   read_op(stream_socket& read_sock, const Buffer& buf, Handler&& ch)
     : operation_base(read_op<Handler>::complete)
@@ -26,11 +54,12 @@ public:
   {
   }
 
+  /// Non copyable, non assignable.
   read_op(const read_op&) = delete;
   read_op& operator=(const read_op&) = delete;
 
 public:
-  ///
+  /// Callback for performing the read when socket is ready for read.
   static void complete(operation_base* op, const std::error_code& ec, size_t bytes_xferred)
   {
     auto self = static_cast<read_op<Handler>*>(op);
@@ -67,13 +96,20 @@ private:
 
 
 /**
+ * A composed operation for reading exact number of bytes
+ * from socket stream to buffer.
  */
 template <typename Handler>
           // typename CompletionHandler
 class composed_read_op
 {
 public:
-  ///
+  /**
+   * Constructor.
+   * \param sock - The socket from where to read from.
+   * \param buf - The buffer view of the read buffer.
+   * \param h - The completion handler to be executed on read complete.
+   */
   composed_read_op(stream_socket& sock,
                    //TODO: Ouch!!
                    buffer::buffer_ref& buf,
@@ -85,9 +121,10 @@ public:
   {
   }
 
-  // Not copyable
+  /// Not copyable
   composed_read_op(const composed_read_op&) = delete;
 
+  /// Move constructible.
   composed_read_op(composed_read_op&& other)
     : read_sock_(other.read_sock_)
     , read_buffer_(other.read_buffer_)
@@ -97,9 +134,10 @@ public:
   {
   }
 
-  // Not copy assignable
+  /// Not copy assignable.
   composed_read_op& operator=(const composed_read_op&) = delete;
 
+  /// Move assignable.
   composed_read_op& operator=(composed_read_op&& other)
   {
     read_sock_ = other.read_sock_;

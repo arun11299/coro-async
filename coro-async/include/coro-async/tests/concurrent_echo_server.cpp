@@ -18,8 +18,13 @@ coro_task_auto<void> server_run(coro_acceptor& acc)
 {
   while ( true )
   {
-    auto client_sock = co_await acc.accept();
-    handle_client(std::move(client_sock));
+    auto result = co_await acc.accept();
+    if (result.is_error())
+    {
+      std::cerr << "Accept failed: " << result.error().message() << '\n';
+      co_return;
+    }
+    handle_client(std::move(result.result()));
   }
   co_return;
 }
